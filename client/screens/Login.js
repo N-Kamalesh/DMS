@@ -26,10 +26,10 @@ export default function Login() {
         </View>
         <View className="flex items-center mx-4 space-y-4">
           <View className="bg-black/5 p-5 rounded-2xl w-full">
-            <TextInput placeholder='Email' placeholderTextColor="#888888" />
+            <TextInput placeholder='Email' placeholderTextColor="black" />
           </View>
           <View className="bg-black/5 p-5 rounded-2xl w-full mb-3">
-            <TextInput placeholder='Password' placeholderTextColor="#888888" secureTextEntry />
+            <TextInput placeholder='Password' placeholderTextColor="black" secureTextEntry />
           </View>
           <View className="w-full">
             <TouchableOpacity className="w-full bg-sky-400 p-3 rounded-2xl mb-3">

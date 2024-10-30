@@ -6,7 +6,6 @@ import { StatusBar } from 'react-native-web'
 import { TouchableOpacity } from 'react-native'
 import Animated,{ FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useNavigation } from 'expo-router'
-
 export default function Login() {
   const navigation=useNavigation();
   return (
@@ -32,7 +31,7 @@ export default function Login() {
             <TextInput placeholder='Password' placeholderTextColor="black" secureTextEntry />
           </View>
           <View className="w-full">
-            <TouchableOpacity className="w-full bg-sky-400 p-3 rounded-2xl mb-3">
+            <TouchableOpacity className="w-full bg-sky-400 p-3 rounded-2xl mb-3" onPress={()=>navigation.navigate('Home')}>
               <Text className="text-xl font-bold text-center text-white">Login</Text>
             </TouchableOpacity>
           </View>

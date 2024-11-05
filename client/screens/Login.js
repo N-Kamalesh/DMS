@@ -1,13 +1,52 @@
-import { View, Text,Image, TextInput} from 'react-native'
-import React from 'react'
-import img1 from '../assets/background.png'
-import img2 from '../assets/light.png'
-import { StatusBar } from 'react-native-web'
-import { TouchableOpacity } from 'react-native'
-import Animated,{ FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
-import { useNavigation } from 'expo-router'
+import { View, Text, Image, TextInput } from 'react-native';
+import React, { useEffect } from 'react';
+import img1 from '../assets/background.png';
+import img2 from '../assets/light.png';
+import { StatusBar } from 'react-native-web';
+import { TouchableOpacity } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useNavigation } from 'expo-router';
+import { useForm, Controller } from 'react-hook-form';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export default function Login() {
-  const navigation=useNavigation();
+  const navigation = useNavigation();
+  const { control, handleSubmit, formState: { errors } } = useForm();
+
+  // Function to handle login and store JWT
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        navigation.navigate('Home'); // Redirect to Home if token exists
+      }
+    };
+    checkToken();
+  }, [navigation]);
+
+  const onSubmit = async (data) => {
+    try {
+      const response = await fetch('http://10.16.49.209:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to login');
+      }
+
+      const responseData = await response.json();
+      await AsyncStorage.setItem('token', responseData.token); // Store token if received
+
+      navigation.navigate('Home'); // Redirect to Home on successful login
+    } catch (error) {
+      console.error('Error logging in:', error);
+    }
+  };
+
   return (
     <View className="bg-white h-full w-full">
       <StatusBar style='light' />
@@ -23,26 +62,62 @@ export default function Login() {
             Login
           </Animated.Text>
         </View>
+        
         <View className="flex items-center mx-4 space-y-4">
-          <View className="bg-black/5 p-5 rounded-2xl w-full">
-            <TextInput placeholder='Email' placeholderTextColor="black" />
-          </View>
+        <View className="bg-black/5 p-5 rounded-2xl w-full">
+                <Controller
+                  control={control}
+                  name="email"
+                  rules={{ required: 'Email is required' }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      placeholder="Email"
+                      placeholderTextColor="black"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                  )}
+                />
+                {errors.email && <Text className="text-red-500">{errors.email.message}</Text>}
+              </View>
+
           <View className="bg-black/5 p-5 rounded-2xl w-full mb-3">
-            <TextInput placeholder='Password' placeholderTextColor="black" secureTextEntry />
+            <Controller
+              control={control}
+              name="password"
+              rules={{ required: 'Password is required' }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  placeholder="Password"
+                  placeholderTextColor="black"
+                  secureTextEntry
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.password && <Text className="text-red-500">{errors.password.message}</Text>}
           </View>
+
           <View className="w-full">
-            <TouchableOpacity className="w-full bg-sky-400 p-3 rounded-2xl mb-3" onPress={()=>navigation.navigate('Home')}>
+            <TouchableOpacity
+              className="w-full bg-sky-400 p-3 rounded-2xl mb-3"
+              onPress={handleSubmit(onSubmit)}
+            >
               <Text className="text-xl font-bold text-center text-white">Login</Text>
             </TouchableOpacity>
           </View>
+
           <View className="justify-center flex-row">
             <Text>Don't have an account?</Text>
-            <TouchableOpacity onPress={()=>navigation.push('Signup')}>
+            <TouchableOpacity onPress={() => navigation.push('Signup')}>
               <Text className="text-sky-600">SignUp</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
     </View>
-  )
+  );
 }

@@ -4,7 +4,7 @@ import img from '../assets/alert.png';
 import backgroundImg from '../assets/redbg.jpg';  
 
 export default function HomeScreen({ navigation }) {
-  return (
+    return (
     <ImageBackground source={backgroundImg} style={styles.background}>
       <View style={styles.container}>
         <View style={styles.box}>

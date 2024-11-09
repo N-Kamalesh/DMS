@@ -1,37 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { Camera } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
-import MapView, { Marker } from 'react-native-maps';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { Camera } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
+import * as ImageManipulator from "expo-image-manipulator";
+import MapView, { Marker } from "react-native-maps";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_URL } from "@env";
+import { useNavigation } from "expo-router";
 
 export default function ReportEmergency() {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
   const [location, setLocation] = useState(null);
-  const [description, setDescription] = useState('');
-  const [locationText, setLocationText] = useState('');
+  const [description, setDescription] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const navigation = useNavigation();
 
-  // Request permissions on mount
   useEffect(() => {
-    (async () => {
-      const cameraStatus = await Camera.requestCameraPermissionsAsync();
-      setHasCameraPermission(cameraStatus.status === 'granted');
-      const locationStatus = await Location.requestForegroundPermissionsAsync();
-      if (locationStatus.status === 'granted') {
-        const currentLocation = await Location.getCurrentPositionAsync({});
-        setLocation({
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
-        });
-      } else {
-        alert('Permission to access location was denied');
+    const fetchPermissionsAndToken = async () => {
+      try {
+        const cameraStatus = await Camera.requestCameraPermissionsAsync();
+        setHasCameraPermission(cameraStatus.status === "granted");
+
+        const locationStatus =
+          await Location.requestForegroundPermissionsAsync();
+        if (locationStatus.status === "granted") {
+          const currentLocation = await Location.getCurrentPositionAsync({});
+          setLocation({
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
+          });
+        } else {
+          Alert.alert("Permission to access location was denied");
+        }
+
+        const email = await AsyncStorage.getItem("email");
+        if (email) {
+          setUserEmail(email);
+        } else {
+          console.log("No email found.");
+        }
+      } catch (error) {
+        console.error("Error fetching permissions or token:", error);
+        Alert.alert("Error", "There was an issue fetching the required data.");
       }
-    })();
+    };
+
+    fetchPermissionsAndToken();
   }, []);
 
-  // Image Picker for uploading a photo
+  const compressImage = async (uri) => {
+    const compressedImage = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return compressedImage.uri;
+  };
+
   const pickImage = async () => {
+    if (images.length >= 3) {
+      Alert.alert("You can only add up to 3 photos.");
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -39,41 +81,116 @@ export default function ReportEmergency() {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const compressedUri = await compressImage(result.assets[0].uri);
+      setImages((prevImages) => [...prevImages, compressedUri]);
     }
   };
 
-  // Camera capture (optional, can be modified to open Camera component)
   const captureImage = async () => {
+    if (images.length >= 3) {
+      Alert.alert("You can only add up to 3 photos.");
+      return;
+    }
+
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 1,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const compressedUri = await compressImage(result.assets[0].uri);
+      setImages((prevImages) => [...prevImages, compressedUri]);
+    }
+  };
+
+  const removeImage = (index) => {
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async () => {
+    if (!description.trim()) {
+      Alert.alert("Description is required");
+      return;
+    }
+
+    if (!location) {
+      Alert.alert("Location is required");
+      return;
+    }
+
+    const base64Images = await Promise.all(
+      images.map(async (uri) => {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      })
+    );
+
+    const submissionData = {
+      description,
+      userEmail,
+      images: base64Images,
+      location,
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/emergency`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (!response.ok) {
+        console.log("Response status:", response.status);
+        console.log("Response message:", await response.text());
+        throw new Error(`Server Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      Alert.alert(data.message);
+      setDescription("");
+      setImages([]);
+      navigation.navigate("Home");
+    } catch (error) {
+      Alert.alert("Error submitting report", error.message);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Report Emergency</Text>
-      
-      <View style={styles.buttonContainer}>
+    <View className="flex-1 p-5 bg-[#f9f9f9]">
+      <Text className="text-2xl font-bold mb-2">Report Emergency</Text>
+
+      <View className="flex-row justify-around my-2">
         <Button title="Upload Photo" onPress={pickImage} />
         <Button title="Take Photo" onPress={captureImage} />
       </View>
 
-      {image && <Image source={{ uri: image }} style={styles.image} />}
-      
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="mt-2"
+      >
+        {images.map((uri, index) => (
+          <View key={index} className="relative mr-2">
+            <Image source={{ uri }} className="w-24 h-24 rounded-md" />
+            <TouchableOpacity
+              className="absolute top-1 right-1 bg-red-500 w-6 h-6 rounded-full justify-center items-center"
+              onPress={() => removeImage(index)}
+            >
+              <Text className="text-white font-bold">X</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+
       <TextInput
-        style={styles.input}
-        placeholder="Location"
-        value={locationText}
-        onChangeText={setLocationText}
-      />
-      <TextInput
-        style={styles.input}
+        className="bg-white p-3 rounded-md my-2"
         placeholder="Description"
         value={description}
         onChangeText={setDescription}
@@ -82,7 +199,7 @@ export default function ReportEmergency() {
 
       {location && (
         <MapView
-          style={styles.map}
+          className="w-full h-72 rounded-md mt-2"
           region={{
             latitude: location.latitude,
             longitude: location.longitude,
@@ -94,57 +211,12 @@ export default function ReportEmergency() {
         </MapView>
       )}
 
-      <TouchableOpacity style={styles.submitButton}>
-        <Text style={styles.submitButtonText}>Submit Report</Text>
+      <TouchableOpacity
+        className="bg-blue-500 p-4 rounded-md items-center mt-5"
+        onPress={onSubmit}
+      >
+        <Text className="text-white text-lg font-bold">Submit Report</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f9f9f9',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 10,
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  input: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
-  },
-  map: {
-    width: '100%',
-    height: 300,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  submitButton: {
-    backgroundColor: '#1E90FF',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});

@@ -2,6 +2,7 @@ import { compressImage } from "../lib/utils.js";
 import EmergencyReport from "../models/Emergency.js";
 
 export async function createEmergencyReport(req, res) {
+  console.log(req)
   try {
     const { description, userEmail, images, location } = req.body;
 

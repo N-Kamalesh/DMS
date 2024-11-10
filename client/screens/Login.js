@@ -8,7 +8,7 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 import { useNavigation } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_URL } from "@env";
+import {API_URL} from "@env";
 
 export default function Login() {
   const navigation = useNavigation();

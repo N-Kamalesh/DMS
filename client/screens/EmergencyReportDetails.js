@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, Alert } from "react-native";
+import { View, Text, Image, ScrollView, Alert, Button, StyleSheet } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { API_URL } from "@env";
 
 export default function EmergencyReportDetails() {
-  const id = "672cf00dcca7fbc5bacb1e77";
+  const route = useRoute();
+  const { id } = route.params; // Retrieve id from route parameters
   const [report, setReport] = useState(null);
+  const [acknowledgedCount, setAcknowledgedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
+  const [isAcknowledged, setIsAcknowledged] = useState(false);
+  const [isRejected, setIsRejected] = useState(false);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchReportDetails = async () => {
@@ -15,6 +22,8 @@ export default function EmergencyReportDetails() {
         }
         const data = await response.json();
         setReport(data);
+        setAcknowledgedCount(data.acknowledgment.accepts);
+        setRejectedCount(data.acknowledgment.rejects);
       } catch (error) {
         Alert.alert("Error", "Could not load emergency report details.");
       }
@@ -23,33 +32,98 @@ export default function EmergencyReportDetails() {
     fetchReportDetails();
   }, [id]);
 
+  const handleAcknowledge = () => {
+    if (!isAcknowledged && !isRejected) {
+      setAcknowledgedCount(acknowledgedCount + 1);
+      setIsAcknowledged(true);
+    }
+  };
+
+  const handleReject = () => {
+    if (!isAcknowledged && !isRejected) {
+      setRejectedCount(rejectedCount + 1);
+      setIsRejected(true);
+    }
+  };
+
   if (!report) return <Text>Loading...</Text>;
 
   return (
-    <ScrollView className="p-5 bg-[#f9f9f9]">
-      <Text className="text-2xl font-bold mb-2">{report.description}</Text>
-      <Text className="text-md text-gray-600 mb-4">
-        Reported by: {report.userEmail}
-      </Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>{report.description}</Text>
+      <Text style={styles.reportedBy}>Reported by: {report.userEmail}</Text>
 
-      <Text className="text-lg font-semibold mt-2">Photos:</Text>
+      <Text style={styles.sectionTitle}>Photos:</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {report.photos.map((photo, index) => (
           <Image
             key={index}
             source={{ uri: photo }}
-            className="w-40 h-40 rounded-lg m-2"
+            style={styles.photo}
           />
         ))}
       </ScrollView>
 
-      <Text className="text-lg font-semibold mt-4">Location:</Text>
+      <Text style={styles.sectionTitle}>Location:</Text>
       <Text>Latitude: {report.location.latitude}</Text>
       <Text>Longitude: {report.location.longitude}</Text>
 
-      <Text className="text-lg font-semibold mt-4">Acknowledgment:</Text>
-      <Text>Accepted: {report.acknowledgment.accepts}</Text>
-      <Text>Rejected: {report.acknowledgment.rejects}</Text>
+      <Text style={styles.sectionTitle}>Acknowledgment:</Text>
+      <Text>Acknowledged: {acknowledgedCount}</Text>
+      <Button
+        title="Acknowledge"
+        onPress={handleAcknowledge}
+        color="#28a745"
+        disabled={isAcknowledged || isRejected} // Disable if acknowledged or rejected
+      />
+
+      <Text style={styles.sectionTitle}>Rejection:</Text>
+      <Text>Rejected: {rejectedCount}</Text>
+      <Button
+        title="Reject"
+        onPress={handleReject}
+        color="#dc3545"
+        disabled={isAcknowledged || isRejected} // Disable if acknowledged or rejected
+      />
+
+      <View style={styles.donateButtonContainer}>
+        <Button
+          title="Donate Funds"
+          onPress={() => navigation.navigate("Funds")}
+          color="#1E90FF"
+        />
+      </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    backgroundColor: "#f9f9f9",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  reportedBy: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 16,
+  },
+  photo: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    margin: 8,
+  },
+  donateButtonContainer: {
+    marginTop: 20,
+  },
+});

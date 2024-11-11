@@ -41,7 +41,7 @@ export default function HomeScreen({ navigation }) {
         `${API_URL}/emergency?lat=${latitude}&lon=${longitude}&radius=2`
       );
       const data = await response.json();
-      console.log(data[0]?.photos[0]);
+      // console.log(data[0]?.photos[0]);
       setEmergencies(data);
     } catch (error) {
       Alert.alert("Error", "Could not fetch emergencies.");

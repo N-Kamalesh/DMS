@@ -5,12 +5,14 @@ import {
   TextInput,
   ScrollView,
   SafeAreaView,
+  TouchableOpacity,
+  StatusBar,
+  Platform,
+  KeyboardAvoidingView
 } from "react-native";
 import React, { useEffect } from "react";
-import img1 from "../assets/background.png";
+import img1 from "../assets/background1.png";
 import img2 from "../assets/light.png";
-import { StatusBar } from "react-native-web";
-import { TouchableOpacity } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { useNavigation } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
@@ -63,38 +65,54 @@ export default function Signup() {
   return (
     <View className="bg-white h-full w-full">
       <StatusBar style="light" />
-      <Image className="h-full w-full absolute" source={img1} />
-      <View className="flex-row justify-around w-full absolute">
-        <Animated.Image
-          entering={FadeInUp.delay(200).duration(1000).springify()}
-          className="h-[225] w-[90]"
-          source={img2}
-        />
-        <Animated.Image
-          entering={FadeInUp.delay(400).duration(1000).springify()}
-          className="h-[160] w-[65]"
-          source={img2}
-        />
-      </View>
-      <View className="h-full w-full flex justify-around pt-48">
-        <View className="flex items-center pt-10">
-          <Animated.Text
-            entering={FadeInUp.duration(1000).springify()}
-            style={{
-              fontWeight: "bold",
-              letterSpacing: 1,
-              fontSize: 40,
-              flexDirection: "row",
-              padding: 55,
-            }}
-          >
-            <Text style={{ color: "black" }}>Sign</Text>
-            <Text style={{ color: "black" }}>Up</Text>
-          </Animated.Text>
+
+      {/* Background Image (img1 covering img2 and signup text) */}
+      <Image
+        source={img1}
+        style={{
+          position: "absolute",
+          top: 0,
+          width: "100%",
+          height: 450, // Ensure img1 is tall enough to cover img2 and the signup text
+          resizeMode: "cover",
+          zIndex: -1,
+        }}
+      />
+
+      {/* Top Container with Overlay Images */}
+      <View className="absolute top-0 w-full h-[450] items-center z-10">
+        <View className="flex-row justify-around w-full absolute top-10">
+          <Animated.Image
+            entering={FadeInUp.delay(200).duration(1000).springify()}
+            className="h-[225] w-[90]"
+            source={img2}
+          />
+          <Animated.Image
+            entering={FadeInUp.delay(400).duration(1000).springify()}
+            className="h-[160] w-[65]"
+            source={img2}
+          />
         </View>
-        <SafeAreaView style={{ flex: 3 }}>
+
+        {/* Signup Text */}
+        <Animated.Text
+          entering={FadeInUp.duration(1000).springify()}
+          className="text-white font-bold tracking-wider text-4xl absolute top-40"
+          style={{ zIndex: 2 }}
+        >
+          SignUp
+        </Animated.Text>
+      </View>
+
+      {/* Form Section */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView edges={["bottom", "left", "right"]}>
           <ScrollView
-            style={{ marginTop: 30, paddingTop: StatusBar.currentHeight }}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            style={{ marginTop: 450 }} // Ensure form starts below img1
           >
             <View className="flex items-center mx-4 space-y-4">
               {/* Username Input */}
@@ -114,9 +132,7 @@ export default function Signup() {
                   )}
                 />
                 {errors.username && (
-                  <Text className="text-red-500">
-                    {errors.username.message}
-                  </Text>
+                  <Text className="text-red-500">{errors.username.message}</Text>
                 )}
               </View>
 
@@ -159,9 +175,7 @@ export default function Signup() {
                   )}
                 />
                 {errors.password && (
-                  <Text className="text-red-500">
-                    {errors.password.message}
-                  </Text>
+                  <Text className="text-red-500">{errors.password.message}</Text>
                 )}
               </View>
 
@@ -224,16 +238,14 @@ export default function Signup() {
                   )}
                 />
                 {errors.location && (
-                  <Text className="text-red-500">
-                    {errors.location.message}
-                  </Text>
+                  <Text className="text-red-500">{errors.location.message}</Text>
                 )}
               </View>
 
               {/* Signup Button */}
               <View className="w-full">
                 <TouchableOpacity
-                  className="w-full bg-sky-400 p-3 rounded-2xl mb-3"
+                  className="w-full bg-red-600 p-3 rounded-2xl mb-3"
                   onPress={handleSubmit(onSubmit)}
                 >
                   <Text className="text-xl font-bold text-center text-white">
@@ -243,7 +255,7 @@ export default function Signup() {
               </View>
 
               {/* Login Link */}
-              <View className="justify-center flex-row margin 30">
+              <View className="justify-center flex-row" style={{ marginBottom: 0 }}>
                 <Text>Already have an account?</Text>
                 <TouchableOpacity onPress={() => navigation.push("Login")}>
                   <Text className="text-sky-600">Login</Text>
@@ -252,7 +264,7 @@ export default function Signup() {
             </View>
           </ScrollView>
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

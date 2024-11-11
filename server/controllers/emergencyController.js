@@ -7,7 +7,7 @@ export async function createEmergencyReport(req, res) {
 
     if (!description || !userEmail || !location) {
       return res.status(400).json({
-        message: "Description, user email, and location are required.",
+        error: "Description, user email, and location are required.",
       });
     }
 
@@ -35,7 +35,7 @@ export async function createEmergencyReport(req, res) {
     });
   } catch (error) {
     console.error("Error creating emergency report:", error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ error: error.message });
   }
 }
 
@@ -45,7 +45,7 @@ export async function getEmergencyReportById(req, res) {
     const emergency = await EmergencyReport.findById(id);
 
     if (!emergency) {
-      return res.status(404).json({ message: "Emergency report not found" });
+      return res.status(404).json({ error: "Emergency report not found" });
     }
 
     const formattedPhotos = emergency.photos.map(
@@ -60,7 +60,7 @@ export async function getEmergencyReportById(req, res) {
     return res.status(200).json(emergencyData);
   } catch (error) {
     console.error("Error fetching emergency report:", error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ error: error.message });
   }
 }
 
@@ -90,13 +90,80 @@ export async function getNearbyEmergencies(req, res) {
       return distance <= searchRadiusKm;
     });
 
-    if (!filteredEmergencies.length) {
-      return res.status(404).json({ message: "No emergencies found nearby." });
-    }
-
     res.status(200).json(filteredEmergencies);
   } catch (error) {
     console.error("Error fetching nearby emergencies:", error);
     res.status(500).json({ error: "Failed to fetch nearby emergencies." });
+  }
+}
+
+export async function acknowledgeEmergency(req, res) {
+  try {
+    const { id, email, option } = req.body;
+    if (!id || !email) {
+      return res.status(400).json({
+        error: "Id and Email are required.",
+      });
+    }
+
+    const emergency = await EmergencyReport.findById(id);
+    if (!emergency) {
+      return res.status(404).json({ error: "Emergency report not found" });
+    }
+
+    if (
+      emergency.acceptedUsers.includes(email) ||
+      emergency.rejectedUsers.includes(email)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "User has already acknowledged this emergency." });
+    }
+
+    if (option === "reject") {
+      emergency.acknowledgment.rejects += 1;
+      emergency.rejectedUsers.push(email);
+    } else if (option === "accept") {
+      emergency.acknowledgment.accepts += 1;
+      emergency.acceptedUsers.push(email);
+    } else {
+      return res.status(400).json({ error: "Invalid acknowledgment option." });
+    }
+
+    await emergency.save();
+    res.status(200).json({ message: "Acknowledgment recorded successfully." });
+  } catch (error) {
+    console.error("Error fetching nearby emergencies:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+export async function addComment(req, res) {
+  try {
+    const { id, email, comment } = req.body;
+    if (!id || !email || !comment) {
+      return res
+        .status(400)
+        .json({ error: "ID, email, and comment are required." });
+    }
+
+    const emergency = await EmergencyReport.findById(id);
+    if (!emergency) {
+      return res.status(404).json({ error: "Emergency report not found" });
+    }
+
+    const newComment = {
+      email,
+      message: comment,
+      timestamp: new Date(),
+    };
+
+    emergency.comments.push(newComment);
+
+    await emergency.save();
+    return res.status(200).json({ message: "Comment added successfully." });
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    return res.status(500).json({ error: error.message });
   }
 }

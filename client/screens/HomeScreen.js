@@ -41,7 +41,6 @@ export default function HomeScreen({ navigation }) {
         `${API_URL}/emergency?lat=${latitude}&lon=${longitude}&radius=2`
       );
       const data = await response.json();
-      // console.log(data[0]?.photos[0]);
       setEmergencies(data);
     } catch (error) {
       Alert.alert("Error", "Could not fetch emergencies.");
@@ -63,7 +62,9 @@ export default function HomeScreen({ navigation }) {
       <ScrollView>
         <View style={styles.container}>
           {loading ? (
-            <Text className="text-white">Loading...</Text>
+            <Text className="text-white text-2xl font-semibold">
+              Loading...
+            </Text>
           ) : emergencies.length > 0 ? (
             emergencies.map((emergency, index) => (
               <View key={index} style={styles.box}>
@@ -89,7 +90,9 @@ export default function HomeScreen({ navigation }) {
               </View>
             ))
           ) : (
-            <Text className="text-white">No emergencies nearby.</Text>
+            <Text className="text-white text-xl font-semibold">
+              No emergencies nearby.
+            </Text>
           )}
         </View>
       </ScrollView>

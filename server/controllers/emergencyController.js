@@ -1,8 +1,7 @@
-import { compressImage } from "../lib/utils.js";
+import { compressImage, getDistanceFromLatLonInKm } from "../lib/utils.js";
 import EmergencyReport from "../models/Emergency.js";
 
 export async function createEmergencyReport(req, res) {
-  console.log(req)
   try {
     const { description, userEmail, images, location } = req.body;
 
@@ -12,19 +11,17 @@ export async function createEmergencyReport(req, res) {
       });
     }
 
-    // Compress and store images
     const compressedImages = await Promise.all(
       images.map(async (base64String) => {
         const compressedBuffer = await compressImage(base64String);
-        return compressedBuffer.toString("base64"); // Store as base64 string
+        return compressedBuffer.toString("base64");
       })
     );
 
-    // Create a new emergency report
     const newReport = new EmergencyReport({
       description,
       userEmail,
-      photos: compressedImages, // Store the compressed base64 strings
+      photos: compressedImages,
       location,
       acknowledgment: { accepts: 0, rejects: 0 },
       comments: [],
@@ -64,5 +61,42 @@ export async function getEmergencyReportById(req, res) {
   } catch (error) {
     console.error("Error fetching emergency report:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+}
+
+export async function getNearbyEmergencies(req, res) {
+  try {
+    const { lat, lon, radius } = req.query;
+    if (!lat || !lon || !radius) {
+      return res
+        .status(400)
+        .json({ error: "Latitude, longitude, and radius are required." });
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+    const searchRadiusKm = parseFloat(radius);
+
+    const emergencies = await EmergencyReport.find({}).exec();
+
+    const filteredEmergencies = emergencies.filter((emergency) => {
+      const { latitude: lat, longitude: long } = emergency.location;
+      const distance = getDistanceFromLatLonInKm(
+        latitude,
+        longitude,
+        lat,
+        long
+      );
+      return distance <= searchRadiusKm;
+    });
+
+    if (!filteredEmergencies.length) {
+      return res.status(404).json({ message: "No emergencies found nearby." });
+    }
+
+    res.status(200).json(filteredEmergencies);
+  } catch (error) {
+    console.error("Error fetching nearby emergencies:", error);
+    res.status(500).json({ error: "Failed to fetch nearby emergencies." });
   }
 }

@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, Alert, Button, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  Alert,
+  Button,
+  StyleSheet,
+} from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { API_URL } from "@env";
 
 export default function EmergencyReportDetails() {
   const route = useRoute();
-  const { id } = route.params; // Retrieve id from route parameters
+  const { id } = route.params;
   const [report, setReport] = useState(null);
   const [acknowledgedCount, setAcknowledgedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
@@ -56,11 +64,7 @@ export default function EmergencyReportDetails() {
       <Text style={styles.sectionTitle}>Photos:</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {report.photos.map((photo, index) => (
-          <Image
-            key={index}
-            source={{ uri: photo }}
-            style={styles.photo}
-          />
+          <Image key={index} source={{ uri: photo }} style={styles.photo} />
         ))}
       </ScrollView>
 

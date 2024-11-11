@@ -4,7 +4,6 @@ import ReportEmergency from "./ReportEmergency";
 import Notifications from "./Notifications";
 import HomeScreen from "./HomeScreen";
 import CustomDrawerContent from "./CustomDrawerContent"; // Import custom drawer content
-import EmergencyReportDetails from "./EmergencyReportDetails";
 import DonateFunds from "./DonateFunds";
 
 const Drawer = createDrawerNavigator();
@@ -18,7 +17,6 @@ export default function Home() {
       <Drawer.Screen name="Homescreen" component={HomeScreen} />
       <Drawer.Screen name="Notifications" component={Notifications} />
       <Drawer.Screen name="Report" component={ReportEmergency} />
-      <Drawer.Screen name="Emergency" component={EmergencyReportDetails} />
       <Drawer.Screen name="Funds" component={DonateFunds} />
     </Drawer.Navigator>
   );

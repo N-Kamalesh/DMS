@@ -17,7 +17,6 @@ import MapView, { Marker } from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
 import { useNavigation } from "expo-router";
-// API_URL="http://10.16.49.209/api"
 
 export default function ReportEmergency() {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);

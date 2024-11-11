@@ -16,7 +16,6 @@ import { useNavigation } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
-// API_URL="http://10.16.49.209/api"
 
 export default function Signup() {
   const navigation = useNavigation();

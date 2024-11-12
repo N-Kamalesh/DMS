@@ -1,6 +1,11 @@
-import { compressImage, getDistanceFromLatLonInKm } from "../lib/utils.js";
+import {
+  compressImage,
+  getDistanceFromLatLonInKm,
+  sendSMS,
+} from "../lib/utils.js";
 import Emergency from "../models/Emergency.js";
 import EmergencyReport from "../models/Emergency.js";
+import User from "../models/User.js";
 
 export async function createEmergencyReport(req, res) {
   try {
@@ -202,6 +207,25 @@ export async function updateStatus(req, res) {
       return res.status(400).json({ error: "Invalid status option." });
 
     emergency.status = status;
+    if (status === "approved") {
+      const users = await User.find().select();
+      const filteredUsers = users.filter((user) => {
+        const { latitude: lat, longitude: long } = user.location;
+        const distance = getDistanceFromLatLonInKm(
+          emergency.location.latitude,
+          emergency.location.longitude,
+          lat,
+          long
+        );
+        return distance <= 2;
+      });
+
+      for (const user of filteredUsers) {
+        if (user.mobile) {
+          await sendSMS(user.mobile, emergency.description);
+        }
+      }
+    }
     await emergency.save();
     return res.status(200).json({ message: "Status updated successfully." });
   } catch (error) {

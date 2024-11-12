@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import twilio from "twilio";
 
 export async function compressImage(base64String) {
   const buffer = Buffer.from(base64String.split(",")[1], "base64");
@@ -27,14 +28,16 @@ export const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
   return EARTH_RADIUS_KM * c;
 };
 
-const filterCoordinatesWithinRadius = (
-  coordinates,
-  refLat,
-  refLon,
-  radiusKm
-) => {
-  return coordinates.filter(([lat, lon]) => {
-    const distance = getDistanceFromLatLonInKm(refLat, refLon, lat, lon);
-    return distance <= radiusKm;
-  });
-};
+export async function sendSMS(number, description) {
+  const client = twilio(process.env.ACCOUNT_SID, process.env.AUTH_TOKEN);
+  try {
+    const message = await client.messages.create({
+      body: "EMERGENCY IN YOUR AREA \n\n" + description,
+      from: process.env.TWILIO_NUMBER,
+      to: "+91" + number,
+    });
+    console.log(`Message sent! SID: ${message.sid}`);
+  } catch (error) {
+    console.error("Error sending SMS:", error);
+  }
+}

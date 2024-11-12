@@ -9,6 +9,7 @@ import {
   StatusBar,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import React, { useEffect } from "react";
 import img1 from "../assets/background1.png";
@@ -48,11 +49,9 @@ export default function Signup() {
         return;
       }
 
-      // Get the current location
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
 
-      // Add location as an object to the data object
       data.location = { latitude, longitude };
 
       const response = await fetch(`${API_URL}/auth/register`, {
@@ -64,15 +63,14 @@ export default function Signup() {
       });
 
       const responseData = await response.json();
-      console.log("Response data:", responseData);
-
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to register");
+      if (response.ok) {
+        navigation.navigate("Login");
+      } else {
+        Alert.alert("Error", responseData.error);
       }
-
-      navigation.navigate("Login");
     } catch (error) {
       console.error("Error signing up:", error);
+      Alert.alert("Error", responseData.error);
     }
   };
 
@@ -146,7 +144,9 @@ export default function Signup() {
                   )}
                 />
                 {errors.username && (
-                  <Text className="text-red-500">{errors.username.message}</Text>
+                  <Text className="text-red-500">
+                    {errors.username.message}
+                  </Text>
                 )}
               </View>
 
@@ -189,7 +189,9 @@ export default function Signup() {
                   )}
                 />
                 {errors.password && (
-                  <Text className="text-red-500">{errors.password.message}</Text>
+                  <Text className="text-red-500">
+                    {errors.password.message}
+                  </Text>
                 )}
               </View>
 
@@ -248,7 +250,10 @@ export default function Signup() {
               </View>
 
               {/* Login Link */}
-              <View className="justify-center flex-row" style={{ marginBottom: 0 }}>
+              <View
+                className="justify-center flex-row"
+                style={{ marginBottom: 0 }}
+              >
                 <Text>Already have an account?</Text>
                 <TouchableOpacity onPress={() => navigation.push("Login")}>
                   <Text className="text-sky-600">Login</Text>

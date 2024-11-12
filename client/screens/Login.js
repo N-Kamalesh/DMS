@@ -46,15 +46,18 @@ export default function Login() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) throw new Error("Failed to login");
-
       const responseData = await response.json();
-      await AsyncStorage.setItem("token", responseData.token);
-      await AsyncStorage.setItem("email",responseData.email)
-      reset();
-      navigation.navigate("Home");
+      if (response.ok) {
+        await AsyncStorage.setItem("token", responseData.token);
+        await AsyncStorage.setItem("email", responseData.email);
+        reset();
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", responseData.error);
+      }
     } catch (error) {
       console.error("Error logging in:", error);
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -77,7 +80,10 @@ export default function Login() {
       {/* Top Container with Overlay and Text */}
       <View className="absolute top-0 w-full h-[350] items-center z-10">
         {/* Overlay Image */}
-        <View className="flex-row justify-around w-full absolute top-10" style={{ zIndex: 1 }}>
+        <View
+          className="flex-row justify-around w-full absolute top-10"
+          style={{ zIndex: 1 }}
+        >
           <Animated.Image
             entering={FadeInUp.delay(200).duration(1000).springify()}
             className="h-[225] w-[90]"
@@ -152,7 +158,9 @@ export default function Login() {
                   )}
                 />
                 {errors.password && (
-                  <Text className="text-red-500">{errors.password.message}</Text>
+                  <Text className="text-red-500">
+                    {errors.password.message}
+                  </Text>
                 )}
               </View>
 
@@ -167,7 +175,10 @@ export default function Login() {
                 </TouchableOpacity>
               </View>
 
-              <View className="justify-center flex-row" style={{ marginBottom: 0 }}>
+              <View
+                className="justify-center flex-row"
+                style={{ marginBottom: 0 }}
+              >
                 <Text>Don't have an account?</Text>
                 <TouchableOpacity onPress={() => navigation.push("Signup")}>
                   <Text className="text-sky-600">SignUp</Text>

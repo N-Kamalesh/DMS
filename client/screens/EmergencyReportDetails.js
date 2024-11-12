@@ -89,6 +89,7 @@ export default function EmergencyReportDetails() {
         Alert.alert("Error", data.error);
       }
     } catch (error) {
+      console.log(error);
       Alert.alert("Error", error.message);
     }
   }

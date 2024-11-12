@@ -41,10 +41,14 @@ export default function HomeScreen({ navigation }) {
         `${API_URL}/emergency?lat=${latitude}&lon=${longitude}&radius=2`
       );
       const data = await response.json();
-      setEmergencies(data);
+      if (response.ok) {
+        setEmergencies(data);
+      } else {
+        Alert.alert("Error", data.error);
+      }
     } catch (error) {
-      Alert.alert("Error", "Could not fetch emergencies.");
       console.error(error);
+      Alert.alert("Error", error.message);
     } finally {
       setLoading(false);
     }

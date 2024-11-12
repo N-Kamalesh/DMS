@@ -1,4 +1,5 @@
 import { compressImage, getDistanceFromLatLonInKm } from "../lib/utils.js";
+import Emergency from "../models/Emergency.js";
 import EmergencyReport from "../models/Emergency.js";
 
 export async function createEmergencyReport(req, res) {
@@ -39,12 +40,24 @@ export async function createEmergencyReport(req, res) {
   }
 }
 
+export async function getAllEmergencies(req, res) {
+  try {
+    const emergencies = await EmergencyReport.find().select(
+      "descrpition userEmail status location acknowledgment"
+    );
+    return res.status(200).json(emergencies);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
 export async function getEmergencyReportById(req, res) {
   try {
     const { id } = req.params;
     const emergency = await EmergencyReport.findById(id);
     console.log(id);
-    
+
     if (!emergency) {
       return res.status(404).json({ error: "Emergency report not found" });
     }
@@ -67,7 +80,7 @@ export async function getEmergencyReportById(req, res) {
 
 export async function getNearbyEmergencies(req, res) {
   try {
-    console.log(req.query)
+    console.log(req.query);
     const { lat, lon, radius } = req.query;
     if (!lat || !lon || !radius) {
       return res
@@ -79,7 +92,10 @@ export async function getNearbyEmergencies(req, res) {
     const longitude = parseFloat(lon);
     const searchRadiusKm = parseFloat(radius);
 
-    const emergencies = await EmergencyReport.find({}).exec();
+    const statuses = ["pending", "approved"];
+    const emergencies = await EmergencyReport.find({
+      status: { $in: statuses },
+    }).exec();
 
     const filteredEmergencies = emergencies.filter((emergency) => {
       const { latitude: lat, longitude: long } = emergency.location;
@@ -166,6 +182,47 @@ export async function addComment(req, res) {
     return res.status(200).json({ message: "Comment added successfully." });
   } catch (error) {
     console.error("Error adding comment:", error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+export async function updateStatus(req, res) {
+  try {
+    const { id, status } = req.body;
+    if (!id || !status) {
+      return res.status(400).json({ error: "Id and status are required." });
+    }
+
+    const emergency = await EmergencyReport.findById(id);
+    if (!emergency) {
+      return res.status(404).json({ error: "Emergency report not found" });
+    }
+
+    if (!["pending", "approved", "rejected"].includes(status))
+      return res.status(400).json({ error: "Invalid status option." });
+
+    emergency.status = status;
+    await emergency.save();
+    return res.status(200).json({ message: "Status updated successfully." });
+  } catch (error) {
+    console.error("Error updating status:", error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+export async function deleteEmergency(req, res) {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: "Emergency ID is required" });
+    }
+    const emergency = await Emergency.findByIdAndDelete(id);
+    if (!emergency) {
+      return res.status(404).json({ error: "Emergency not found" });
+    }
+    return res.status(200).json({ message: "Emergency deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleting emergency", error);
     return res.status(500).json({ error: error.message });
   }
 }

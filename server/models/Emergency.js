@@ -69,7 +69,7 @@ const emergencySchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ["pending", "resolved", "unresolved"],
+      enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
     acceptedUsers: {

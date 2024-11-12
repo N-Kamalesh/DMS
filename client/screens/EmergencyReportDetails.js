@@ -26,7 +26,7 @@ export default function EmergencyReportDetails() {
     try {
       const email = await AsyncStorage.getItem("email");
       setUserEmail(email);
-      console.log(email)
+      console.log(email);
       const response = await fetch(`${API_URL}/emergency/${id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch report details");
@@ -120,6 +120,9 @@ export default function EmergencyReportDetails() {
         ))}
       </ScrollView>
 
+      <Text className="my-4 w-full text-center p-1 bg-blue-600">
+        {report.status}
+      </Text>
       <Text className="text-lg font-semibold mt-4 mb-1">Comments:</Text>
       <ScrollView
         style={{ maxHeight: 200 }}

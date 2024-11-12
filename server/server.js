@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import connectDB from "./config/db.js";
 import authRouter from "./routes/authRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 import emergencyRouter from "./routes/emergencyRoutes.js";
 import cors from "cors";
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/emergency", emergencyRouter);
+app.use("/api/notification", notificationRouter);
 app.get("/", (req, res) => {
   res.status(200).json({ message: "You hit the dms api route!" });
 });

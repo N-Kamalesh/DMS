@@ -1,32 +1,64 @@
-import * as React from 'react';
-import { Button, View } from 'react-native';
-// import SendSMS from 'react-native-sms';
-import * as SMS from 'expo-sms';
-import { useState,useEffect } from 'react';
-export default function Notifications({ navigation }) {
-  const [isAvailable,setIsAvailable]=useState(false);
-  const [phone,setPhone]=useState(undefined);
-  const [message,setMessage]=useState(undefined);
+import { Text, ScrollView, Alert, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { useIsFocused } from "@react-navigation/native";
+import { API_URL } from "@env";
+
+export default function Notifications() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    async function check(){
-      const isSmsAvailable=await SMS.isAvailableAsync();
-      setIsAvailable(isSmsAvailable);
+    async function getNotifications() {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_URL}/notification`);
+        const data = await response.json();
+        if (response.ok) {
+          setNotifications(data);
+        } else {
+          Alert.alert("Error", data.error);
+        }
+      } catch (error) {
+        console.log(error);
+        Alert.alert("Error", error.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    check();
-  },[]);
+    getNotifications();
+  }, [isFocused]);
 
-  const sendSms=async ()=>{
-    const {result} =await SMS.sendSMSAsync(
-      ['6381086085'],
-      'Sample message'
-    );
-    console.log(result);
-  };
+  if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Button title="Send Emergency SMS" onPress={sendSms} />
-    </View>
-
+      <View className="h-screen w-full flex justify-center items-center">
+        <Text className="text-2xl">Loading...</Text>
+      </View>
     );
+  }
+  return (
+    <>
+      {notifications.length == 0 ? (
+        <View className="h-screen w-full flex justify-center items-center">
+          <Text className="text-2xl">No notifications yet</Text>
+        </View>
+      ) : (
+        <View className="my-8 px-6 flex flex-col items-center space-y-4">
+          {notifications.map((note) => (
+            <View
+              key={note._id}
+              className="rounded-lg bg-red-600 px-4 space-y-2 py-3 w-full"
+            >
+              <Text className="text-xl font-bold text-red-50">
+                {note.title}
+              </Text>
+              <Text className="text-md font-medium text-red-200">
+                {note.desc}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
 }
-  

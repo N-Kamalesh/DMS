@@ -31,7 +31,7 @@ export default function HomeScreen({ navigation }) {
         setLoading(false);
         return;
       }
-      
+
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingTop: 50,
+    paddingTop: 20,
     backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   box: {

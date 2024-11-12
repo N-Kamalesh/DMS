@@ -43,7 +43,6 @@ export default function ReportEmergency() {
         } else {
           Alert.alert("Permission to access location was denied");
         }
-
         const email = await AsyncStorage.getItem("email");
         if (email) {
           setUserEmail(email);

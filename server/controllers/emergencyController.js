@@ -43,7 +43,8 @@ export async function getEmergencyReportById(req, res) {
   try {
     const { id } = req.params;
     const emergency = await EmergencyReport.findById(id);
-
+    console.log(id);
+    
     if (!emergency) {
       return res.status(404).json({ error: "Emergency report not found" });
     }
@@ -66,6 +67,7 @@ export async function getEmergencyReportById(req, res) {
 
 export async function getNearbyEmergencies(req, res) {
   try {
+    console.log(req.query)
     const { lat, lon, radius } = req.query;
     if (!lat || !lon || !radius) {
       return res

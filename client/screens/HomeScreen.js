@@ -31,7 +31,7 @@ export default function HomeScreen({ navigation }) {
         setLoading(false);
         return;
       }
-
+      
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });

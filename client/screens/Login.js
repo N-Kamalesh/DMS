@@ -50,6 +50,7 @@ export default function Login() {
 
       const responseData = await response.json();
       await AsyncStorage.setItem("token", responseData.token);
+      await AsyncStorage.setItem("email",responseData.email)
       reset();
       navigation.navigate("Home");
     } catch (error) {

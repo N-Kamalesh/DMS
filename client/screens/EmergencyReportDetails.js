@@ -26,6 +26,7 @@ export default function EmergencyReportDetails() {
     try {
       const email = await AsyncStorage.getItem("email");
       setUserEmail(email);
+      console.log(email)
       const response = await fetch(`${API_URL}/emergency/${id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch report details");

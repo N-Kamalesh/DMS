@@ -35,10 +35,9 @@ const userSchema = new mongoose.Schema(
       match: /^\d{10}$/,
     },
     location: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true }
+    }
   },
   {
     timestamps: true,

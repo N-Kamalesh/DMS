@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Platform,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
 } from "react-native";
 import React, { useEffect } from "react";
 import img1 from "../assets/background1.png";
@@ -18,6 +18,8 @@ import { useNavigation } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_URL } from "@env";
+import { useIsFocused } from "@react-navigation/native";
+import * as Location from "expo-location";
 
 export default function Signup() {
   const navigation = useNavigation();
@@ -39,6 +41,20 @@ export default function Signup() {
 
   const onSubmit = async (data) => {
     try {
+      // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        alert("Location permission not granted");
+        return;
+      }
+
+      // Get the current location
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      // Add location as an object to the data object
+      data.location = { latitude, longitude };
+
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: {
@@ -47,10 +63,8 @@ export default function Signup() {
         body: JSON.stringify(data),
       });
 
-      // Log response status and body for debugging
-      console.log("Response status:", response.status);
       const responseData = await response.json();
-      console.log("Response data:", responseData); // Check the response data
+      console.log("Response data:", responseData);
 
       if (!response.ok) {
         throw new Error(responseData.message || "Failed to register");
@@ -73,7 +87,7 @@ export default function Signup() {
           position: "absolute",
           top: 0,
           width: "100%",
-          height: 450, // Ensure img1 is tall enough to cover img2 and the signup text
+          height: 450,
           resizeMode: "cover",
           zIndex: -1,
         }}
@@ -112,7 +126,7 @@ export default function Signup() {
         <SafeAreaView edges={["bottom", "left", "right"]}>
           <ScrollView
             contentContainerStyle={{ paddingBottom: 20 }}
-            style={{ marginTop: 450 }} // Ensure form starts below img1
+            style={{ marginTop: 450 }}
           >
             <View className="flex items-center mx-4 space-y-4">
               {/* Username Input */}
@@ -218,27 +232,6 @@ export default function Signup() {
                 />
                 {errors.mobile && (
                   <Text className="text-red-500">{errors.mobile.message}</Text>
-                )}
-              </View>
-
-              {/* Location Input */}
-              <View className="bg-black/5 p-5 rounded-2xl w-full mb-3">
-                <Controller
-                  control={control}
-                  name="location"
-                  rules={{ required: "Location is required" }}
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      placeholder="Location"
-                      placeholderTextColor="black"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value}
-                    />
-                  )}
-                />
-                {errors.location && (
-                  <Text className="text-red-500">{errors.location.message}</Text>
                 )}
               </View>
 

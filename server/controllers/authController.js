@@ -6,16 +6,19 @@ import "dotenv/config";
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, aadhar, mobile, location } = req.body;
-
+    console.log(req.body);
     if (
       !name.trim() ||
       !email.trim() ||
       !password.trim() ||
       !aadhar.trim() ||
-      !mobile.trim() ||
-      !location.trim()
+      !mobile.trim()
     ) {
       return res.status(400).json({ error: "All fields are required" });
+    }
+
+    if (!location || typeof location.latitude !== "number" || typeof location.longitude !== "number") {
+      return res.status(400).json({ error: "Valid location coordinates are required" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -32,7 +35,10 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       aadhar,
       mobile,
-      location,
+      location: {
+        latitude: location.latitude,
+        longitude: location.longitude
+      }
     });
 
     await user.save();

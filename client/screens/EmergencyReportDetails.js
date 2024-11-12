@@ -121,7 +121,11 @@ export default function EmergencyReportDetails() {
         ))}
       </ScrollView>
 
-      <Text className="my-4 w-full text-center p-1 bg-blue-600">
+      <Text
+        className={`my-4 w-full text-center p-2 text-white uppercase font-bold ${
+          report.status === "pending" ? "bg-blue-600" : "bg-emerald-600"
+        }`}
+      >
         {report.status}
       </Text>
       <Text className="text-lg font-semibold mt-4 mb-1">Comments:</Text>
